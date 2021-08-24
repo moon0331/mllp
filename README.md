@@ -156,11 +156,14 @@ The tutorial is shown in the jupyter notebook [tutorial.ipynb](tutorial.ipynb).
 If our work is helpful to you, please kindly cite our paper as:
 
 ```
-@article{wang2019transparent,
-  title={Transparent Classification with Multilayer Logical Perceptrons and Random Binarization},
-  author={Wang, Zhuo and Zhang, Wei and Liu, Ning and Wang, Jianyong},
-  journal={arXiv preprint arXiv:1912.04695},
-  year={2019}
+@inproceedings{wang2020transparent,
+  title={Transparent classification with multilayer logical perceptrons and random binarization},
+  author={Wang, Zhuo and Zhang, Wei and Ning, LIU and Wang, Jianyong},
+  booktitle={Proceedings of the AAAI conference on artificial intelligence},
+  volume={34},
+  number={04},
+  pages={6331--6339},
+  year={2020}
 }
 ```
 
