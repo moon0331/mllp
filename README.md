@@ -1,3 +1,8 @@
+# Our new work
+For better scalability and classification performance, please refer to our new work:
+- Paper: [Scalable Rule-Based Representation Learning for Interpretable Classification (NeurIPS 2021)](https://arxiv.org/abs/2109.15103).
+- Code: [https://github.com/12wang3/rrl](https://github.com/12wang3/rrl)
+
 # Multilayer Logical Perceptrons
 This is a PyTorch implementation of Multilayer Logical Perceptrons (MLLP) and Random Binarization (RB) method to learn Concept Rule Sets (CRS) for transparent classification tasks, as described in our paper:
 [Transparent Classification with Multilayer Logical Perceptrons and Random Binarization](https://arxiv.org/abs/1912.04695).
