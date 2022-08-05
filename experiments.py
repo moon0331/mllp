@@ -145,7 +145,8 @@ if __name__ == '__main__':
                         help='Set the data set for training. All the data sets in the dataset folder are available.')
     parser.add_argument('-k', '--kfold', type=int, default=5, help='Set the k of K-Folds cross-validation.')
     parser.add_argument('-ki', '--ith_kfold', type=int, default=0, help='Do the i-th validation, 0 <= ki < k.')
-    parser.add_argument('--use_validation_set', action="store_true",
+    # parser.add_argument('--use_validation_set', action="store_true",
+    parser.add_argument('--use_validation_set', action="store_false",
                         help='Use the validation set for parameters tuning.')
     parser.add_argument('-e', '--epoch', type=int, default=401, help='Set the total epoch.') # 401
     parser.add_argument('-bs', '--batch_size', type=int, default=64, help='Set the batch size.')
@@ -182,3 +183,8 @@ if __name__ == '__main__':
     # for arg in vars(args):
     #     print(arg, getattr(args, arg))
     experiment(args)
+
+
+'''
+일단 lr 낮춰야 할것 같긴 함
+'''
