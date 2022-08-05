@@ -83,17 +83,17 @@ def experiment(args):
 
     logging.info('Discretizing and binarizing data. Please wait ...')
     db_enc = DBEncoder(f_df, discrete=True)
-    db_enc.fit(X_df, y_df)
+    db_enc.fit(X_df.drop(columns='GMKEY'), y_df)
     X_fname = db_enc.X_fname
     y_fname = db_enc.y_fname
-    X_train, y_train = db_enc.transform(X_train_df, y_train_df)
-    X_test, y_test = db_enc.transform(X_test_df, y_test_df)
+    X_train, y_train = db_enc.transform(X_train_df.drop(columns='GMKEY'), y_train_df)
+    X_test, y_test = db_enc.transform(X_test_df.drop(columns='GMKEY'), y_test_df)
     logging.info('Data discretization and binarization are done.')
 
     if args.use_validation_set:
         if dataset == 'baseball':
-            X_validation = X_df[X_df.GMKEY.str.startswith('2020')]
-            y_validation = y_df[X_df.GMKEY.str.startswith('2020')]
+            X_validation = X_train[X_df.GMKEY.str.startswith('2020')] ########### 2020 맞는지
+            y_validation = y_train[X_df.GMKEY.str.startswith('2020')]
         else:
             # Use 20% of the training set as the validation set.
             kf = KFold(n_splits=5, shuffle=True, random_state=0)
