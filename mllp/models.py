@@ -7,6 +7,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn import metrics
 from collections import defaultdict
+from tqdm import tqdm
 
 from mllp.utils import UnionFind
 
@@ -57,7 +58,7 @@ class ConjunctionLayer(nn.Module):
         self.input_dim = input_dim if not use_not else input_dim * 2
 
         # Initialization: set Wi close to 0 to avoid gradient being too small.
-        self.W = nn.Parameter(0.1 * torch.rand(self.n, self.input_dim))
+        self.W = nn.Parameter(0.1 * torch.rand(self.n, self.input_dim)) # Uniform(0, 0.1)
         self.node_activation_cnt = None
         self.randomly_binarize_layer = RandomBinarizationLayer(self.W.shape, random_binarization_rate)
 
@@ -88,7 +89,7 @@ class DisjunctionLayer(nn.Module):
         self.input_dim = input_dim if not use_not else input_dim * 2
 
         # Initialization: set Wi close to 0 to avoid gradient being too small.
-        self.W = nn.Parameter(0.1 * torch.rand(self.n, self.input_dim))
+        self.W = nn.Parameter(0.1 * torch.rand(self.n, self.input_dim)) # Uniform(0, 0.1)
         self.node_activation_cnt = None
         self.randomly_binarize_layer = RandomBinarizationLayer(self.W.shape, random_binarization_rate)
 
@@ -264,7 +265,7 @@ class MLLP(nn.Module):
 
         criterion = nn.MSELoss()
         optimizer = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=weight_decay)
-        for epo in range(epoch):
+        for epo in tqdm(range(epoch)):
             optimizer = self.exp_lr_scheduler(optimizer, epo, init_lr=lr, lr_decay_rate=lr_decay_rate,
                                               lr_decay_epoch=lr_decay_epoch)
             running_loss = 0.0
@@ -338,7 +339,7 @@ class MLLP(nn.Module):
             y_pred_b = torch.cat(y_pred_b_list)
             y_pred_b = y_pred_b.cpu().numpy()
             logging.debug('y_pred_b: {} {}'.format(y_pred_b.shape, y_pred_b[:: (slice_step * 2)]))
-            y_pred_b = np.argmax(y_pred_b, axis=1)
+            y_pred_b = np.argmax(y_pred_b, axis=1) # If more than one dimension of s(2L) has value equals to 1, we choose the first one as the result.
             logging.debug('{} {}'.format(y_pred_b.shape, y_pred_b[:: slice_step]))
 
             accuracy = metrics.accuracy_score(y, y_pred)
@@ -346,6 +347,8 @@ class MLLP(nn.Module):
 
             f1_score = metrics.f1_score(y, y_pred, average='macro')
             f1_score_b = metrics.f1_score(y, y_pred_b, average='macro')
+
+            print(f'acc {accuracy_b*100:.2f}, f1 {f1_score_b:.4f}')
         return accuracy, accuracy_b, f1_score, f1_score_b
 
     def detect_dead_node(self, X, need_transform=True):
@@ -378,6 +381,8 @@ class MLLP(nn.Module):
         else:
             activation_cnt_list = None
 
+        # activation_cnt_list is a list of activation counts of each layer. (3,27)
+
         # Get the rules from the top layer to the bottom layer.
         param_list = list(self.parameters())
         n_param = len(param_list)
@@ -385,10 +390,10 @@ class MLLP(nn.Module):
         rules_list = []
         for i in reversed(range(n_param)):
             param = param_list[i]
-            W = param.cpu().detach().numpy()
+            W = param.cpu().detach().numpy() # param
             rules = defaultdict(list)
-            num = self.dim_list[i]
-            for k, row in enumerate(W):
+            num = self.dim_list[i] # input dim
+            for k, row in enumerate(W): # row == (W_{i,i-1})^(k)
                 if i != n_param - 1 and ((i, k) not in mark):
                     continue
                 if X is not None and activation_cnt_list[i + 1][k] < 1:

@@ -56,16 +56,30 @@ def plot_loss(args, loss_log, accuracy, accuracy_b, f1_score, f1_score_b):
 
 def experiment(args):
     dataset = args.data_set
-    data_path = os.path.join(DATA_DIR, dataset + '.data')
-    info_path = os.path.join(DATA_DIR, dataset + '.info')
-    X_df, y_df, f_df, label_pos = read_csv(data_path, info_path, shuffle=True)
+    if dataset == 'baseball': # my baseball data
+        data_path = os.path.join(DATA_DIR, dataset + '.data')
+        info_path = os.path.join(DATA_DIR, dataset + '.info')
+        X_df, y_df, f_df, label_pos = read_csv(data_path, info_path, shuffle=True, is_baseball=True)
 
-    kf = KFold(n_splits=args.kfold, shuffle=True, random_state=0)
-    train_index, test_index = list(kf.split(X_df))[args.ith_kfold]
-    X_train_df = X_df.iloc[train_index]
-    y_train_df = y_df.iloc[train_index]
-    X_test_df = X_df.iloc[test_index]
-    y_test_df = y_df.iloc[test_index]
+        # kf = KFold(n_splits=args.kfold, shuffle=True, random_state=0)
+        # train_index, test_index = list(kf.split(X_df))[args.ith_kfold]
+        _train_year_range = ('2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020') #include valid
+        X_train_df = X_df[X_df.GMKEY.str.startswith(_train_year_range)]
+        y_train_df = y_df[X_df.GMKEY.str.startswith(_train_year_range)]
+
+        X_test_df = X_df[X_df.GMKEY.str.startswith('2021')] # testset의 정의
+        y_test_df = y_df[X_df.GMKEY.str.startswith('2021')]
+    else:
+        data_path = os.path.join(DATA_DIR, dataset + '.data')
+        info_path = os.path.join(DATA_DIR, dataset + '.info')
+        X_df, y_df, f_df, label_pos = read_csv(data_path, info_path, shuffle=True)
+
+        kf = KFold(n_splits=args.kfold, shuffle=True, random_state=0)
+        train_index, test_index = list(kf.split(X_df))[args.ith_kfold]
+        X_train_df = X_df.iloc[train_index]
+        y_train_df = y_df.iloc[train_index]
+        X_test_df = X_df.iloc[test_index]
+        y_test_df = y_df.iloc[test_index]
 
     logging.info('Discretizing and binarizing data. Please wait ...')
     db_enc = DBEncoder(f_df, discrete=True)
@@ -77,13 +91,17 @@ def experiment(args):
     logging.info('Data discretization and binarization are done.')
 
     if args.use_validation_set:
-        # Use 20% of the training set as the validation set.
-        kf = KFold(n_splits=5, shuffle=True, random_state=0)
-        train_index, validation_index = next(kf.split(X_train))
-        X_validation = X_train[validation_index]
-        y_validation = y_train[validation_index]
-        X_train = X_train[train_index]
-        y_train = y_train[train_index]
+        if dataset == 'baseball':
+            X_validation = X_df[X_df.GMKEY.str.startswith('2020')]
+            y_validation = y_df[X_df.GMKEY.str.startswith('2020')]
+        else:
+            # Use 20% of the training set as the validation set.
+            kf = KFold(n_splits=5, shuffle=True, random_state=0)
+            train_index, validation_index = next(kf.split(X_train))
+            X_validation = X_train[validation_index]
+            y_validation = y_train[validation_index]
+            X_train = X_train[train_index]
+            y_train = y_train[train_index]
     else:
         X_validation = None
         y_validation = None
@@ -123,13 +141,13 @@ def experiment(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-d', '--data_set', type=str, default='tic-tac-toe',
+    parser.add_argument('-d', '--data_set', type=str, default='baseball', #'tic-tac-toe',
                         help='Set the data set for training. All the data sets in the dataset folder are available.')
     parser.add_argument('-k', '--kfold', type=int, default=5, help='Set the k of K-Folds cross-validation.')
     parser.add_argument('-ki', '--ith_kfold', type=int, default=0, help='Do the i-th validation, 0 <= ki < k.')
     parser.add_argument('--use_validation_set', action="store_true",
                         help='Use the validation set for parameters tuning.')
-    parser.add_argument('-e', '--epoch', type=int, default=401, help='Set the total epoch.')
+    parser.add_argument('-e', '--epoch', type=int, default=401, help='Set the total epoch.') # 401
     parser.add_argument('-bs', '--batch_size', type=int, default=64, help='Set the batch size.')
     parser.add_argument('-lr', '--learning_rate', type=float, default=0.01, help='Set the initial learning rate.')
     parser.add_argument('-lrdr', '--lr_decay_rate', type=float, default=0.75, help='Set the learning rate decay rate.')
@@ -140,7 +158,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_not', action="store_true",
                         help='Use the NOT (~) operator in logical rules. '
                              'It will enhance model capability but make the CRS more complex.')
-    parser.add_argument('-s', '--structure', type=str, default='64',
+    parser.add_argument('-s', '--structure', type=str, default='64_32_16', # 64
                         help='Set the structure of network. Only the number of nodes in middle layers are needed. '
                              'E.g., 64, 64_32_16. The total number of middle layers should be odd.')
 
